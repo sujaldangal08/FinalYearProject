@@ -2,6 +2,8 @@ import cv2
 import os
 import numpy as np
 import datetime
+import time
+import pandas as pd
 
 # Function to load images and labels from a directory
 def load_images_from_folder(folder):
@@ -25,7 +27,7 @@ def load_images_from_folder(folder):
     return images, labels, label_dict
 
 # Load training images, labels, and label-to-name mapping
-training_folder = "path_to_training_data_folder"
+training_folder = "/home/sujaldangal/Documents/training_folder"
 training_images, training_labels, label_dict = load_images_from_folder(training_folder)
 
 # Function to calculate LBPH feature for an image
@@ -34,21 +36,26 @@ def calculate_lbp_image(img):
     lbp_image = np.zeros((height-2, width-2), dtype=np.uint8)
 
     for y in range(1, height-1):
-        for x in range(1, width-1):
-            center = img[y, x]
-            pattern = 0
+      for x in range(1, width-1):
+        center = img[y, x]
+        pattern = np.uint8(0)  # Initialize pattern as uint8
 
-            for dx in [-1, 0, 1]:
-                for dy in [-1, 0, 1]:
-                    if dx == 0 and dy == 0:
-                        continue
-                    if img[y + dy, x + dx] >= center:
-                        pattern |= 1
-                    pattern <<= 1
+        for dx in [-1, 0, 1]:
+            for dy in [-1, 0, 1]:
+                if dx == 0 and dy == 0:
+                    continue
+                if img[y + dy, x + dx] >= center:
+                    pattern |= np.uint8(1)  # Set the least significant bit
+                pattern <<= np.uint8(1)  # Left-shift the pattern
 
-            lbp_image[y - 1, x - 1] = pattern
+        # Right-shift the pattern to keep it within 8 bits
+        pattern >>= np.uint8(1)
+
+        lbp_image[y - 1, x - 1] = pattern
+
 
     return lbp_image
+
 
 # Function to calculate LBPH histogram for an image
 def calculate_lbp_histogram(lbp_image, num_bins=256):
@@ -70,6 +77,12 @@ video_capture = cv2.VideoCapture(0)
 
 # Attendance records
 attendance = {}
+
+# Cooldown period in seconds
+cooldown_period = 300
+
+# Create a DataFrame to store attendance data
+attendance_df = pd.DataFrame(columns=['Name', 'Timestamp'])
 
 while True:
     ret, frame = video_capture.read()
@@ -110,7 +123,12 @@ while True:
                 attendance[recognized_person] = []
 
             current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            attendance[recognized_person].append(current_time)
+
+            if not attendance[recognized_person] or (time.time() - attendance[recognized_person][-1]) >= cooldown_period:
+                attendance[recognized_person].append(time.time())  # Record the current time
+                
+                # Add data to the DataFrame
+                attendance_df = pd.concat([attendance_df, pd.DataFrame({'Name': [recognized_person], 'Timestamp': [current_time]})])
 
         # Draw a rectangle and label for the recognized face
         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
@@ -127,9 +145,11 @@ while True:
 video_capture.release()
 cv2.destroyAllWindows()
 
-# Save attendance records to a file
-with open("attendance.txt", "w") as file:
-    for name, timestamps in attendance.items():
-        file.write(f"{name} - {len(timestamps)} attendance(s):\n")
-        for timestamp in timestamps:
-            file.write(f"  {timestamp}\n")
+# Save attendance records to an Excel file
+excel_file_path = "/home/sujaldangal/Documents/attendance.xlsx"
+
+try:
+    attendance_df.to_excel(excel_file_path, index=False)
+    print(f"Attendance data saved to {excel_file_path}")
+except Exception as e:
+    print(f"An error occurred while saving the Excel file: {e}")
