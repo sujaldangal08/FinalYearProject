@@ -1,0 +1,40 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap");
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+.setBackground{
+    background-image: url("images/signin.jpeg");
+    height: 100vh;
+   background-repeat: no-repeat;
+   background-position: center;
+   background-size: cover;
+   position: fixed;
+ }
+ #popup{
+    width:400px;
+    background-color: blanchedalmond;
+ }
+ .login{
+  position:absolute;
+  top: 30%;
+  left:30%;
+
+  background-position: center;
+  
+  
+ }
+ 
+ .form-floating .form-control {
+  box-shadow: 0 0 0.2rem rgb(136, 131, 131); /* Change the color here */
+  border: rgb(155, 149, 149);
+  /* Other styles you may want to modify */
+}
+.form-check-input:checked,:focus{
+background-color: black;
+border:rgb(9, 4, 4);
+
+
+}

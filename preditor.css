@@ -1,0 +1,13 @@
+.md-form .form-control {
+    box-shadow: 0 0 0.2rem rgb(136, 131, 131); /* Change the color here */
+    border: rgb(155, 149, 149);
+    /* Other styles you may want to modify */
+    width:250px;
+    justify-content: center;
+    margin-left: 7rem;
+    
+
+}
+label{
+    margin-left: 7rem;
+}
